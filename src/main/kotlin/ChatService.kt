@@ -26,14 +26,14 @@ class ChatService {
         }; последнее сообщение: ${getLastMessage(chat) ?: "нет сообщений;"}"
     }
 
-    private fun createChatWithUserId(toId: String): Chat {
+    fun createChatWithUserId(toId: String): Chat {
         currentChatId++
         val chat = Chat(currentChatId, currentUserId, toId)
         chats.add(chat)
         return chats.last()
     }
 
-    private fun getChatPeerToPeer(peerId1: String, peerId2: String): Chat? {
+    fun getChatPeerToPeer(peerId1: String, peerId2: String): Chat? {
         return chats
             .find {
                 (it.userId1.equals(peerId1, true) && it.userId2.equals(peerId2, true))
@@ -48,9 +48,9 @@ class ChatService {
 
     fun getUnreadChatsCount(userId: String): Int {
         return chats
-            .filter { chat ->
-                (chat.userId1.equals(userId, true) || chat.userId2.equals(userId, true))
-                        && (chat.messages.any { it.toId.equals(userId, true) && !it.isRead })
+            .filter {
+                (it.userId1.equals(userId, true) || it.userId2.equals(userId, true))
+                        && (it.messages.any { it.toId.equals(userId, true) && !it.isRead })
             }
             .size
     }
@@ -79,11 +79,13 @@ class ChatService {
     fun getMessageByMessageId(chatId: Int, messageId: Int): Message {
         val chat =
             chats.find { it.chatId == chatId } ?: throw ChatNotFoundException("Чат с id = $chatId не найден!")
-        return chat.messages.find { it.messageId == messageId }
-            ?: throw MessageNotFoundException("Сообщение с id = $messageId не найдено!")
+        val message =
+            chat.messages.find { it.messageId == messageId }
+                ?: throw MessageNotFoundException("Сообщение с id = $messageId не найдено!")
+        return message
     }
 
-    private fun getLastMessage(chat: Chat): Message? {
+    fun getLastMessage(chat: Chat): Message? {
         return chat.messages.lastOrNull()
     }
 
@@ -94,6 +96,7 @@ class ChatService {
             .takeWhile { messageId != it.messageId }
             .takeLast(count)
         messages.filter { it.toId.equals(currentUserId, true) }.forEach { it.isRead = true }
+
         return messages
     }
 
