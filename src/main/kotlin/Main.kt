@@ -25,8 +25,7 @@ fun main() {
             "5 - УДАЛИТЬ ЧАТ\n" +
             "6 - LOGIN\n" +
             "7 - LOGOFF\n" +
-            "8 - ВЫЙТИ\n" +
-            "9 - Получить сообщение по id"
+            "8 - ВЫЙТИ\n" +            
 
     println(listOfCommands)
 
