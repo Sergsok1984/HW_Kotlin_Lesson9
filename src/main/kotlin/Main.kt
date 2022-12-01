@@ -25,7 +25,8 @@ fun main() {
             "5 - УДАЛИТЬ ЧАТ\n" +
             "6 - LOGIN\n" +
             "7 - LOGOFF\n" +
-            "8 - ВЫЙТИ"
+            "8 - ВЫЙТИ\n" +
+            "9 - Получить сообщение по id"
 
     println(listOfCommands)
 
@@ -67,6 +68,7 @@ fun main() {
                 val count = readInt("Количество сообщений: ") ?: 0
                 println("Список сообщений чата $chatId:")
                 chatService.getMessages(chatId, messageId, count).forEach { println(it) }
+
             }
             "5" -> {
                 val chatId = readInt("id чата: ") ?: 0
@@ -77,6 +79,7 @@ fun main() {
             "8", "Q" -> break
             else -> print("Некорректная команда!\n")
         }
+        println()
         println(listOfCommands)
     }
 }

@@ -34,13 +34,13 @@ class ChatServiceTest {
         chatService.sendMessage("Петр", "Еще раз как дела, Петр?")
 
         val chatId = 1
-        val messageId = 1
+        val messageId = 2
         val count = 1
 
         val messages = chatService.getMessages(chatId, messageId, count)
         val result = messages[0].text
 
-        assertEquals("Еще раз привет, Олег!", result)
+        assertEquals("Привет, Олег!", result)
     }
 
     @Test(expected = MessageNotFoundException::class)

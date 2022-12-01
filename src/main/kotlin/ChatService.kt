@@ -26,14 +26,14 @@ class ChatService {
         }; последнее сообщение: ${getLastMessage(chat) ?: "нет сообщений;"}"
     }
 
-    fun createChatWithUserId(toId: String): Chat {
+    private fun createChatWithUserId(toId: String): Chat {
         currentChatId++
         val chat = Chat(currentChatId, currentUserId, toId)
         chats.add(chat)
         return chats.last()
     }
 
-    fun getChatPeerToPeer(peerId1: String, peerId2: String): Chat? {
+    private fun getChatPeerToPeer(peerId1: String, peerId2: String): Chat? {
         return chats
             .find {
                 (it.userId1.equals(peerId1, true) && it.userId2.equals(peerId2, true))
@@ -48,9 +48,9 @@ class ChatService {
 
     fun getUnreadChatsCount(userId: String): Int {
         return chats
-            .filter {
-                (it.userId1.equals(userId, true) || it.userId2.equals(userId, true))
-                        && (it.messages.any { it.toId.equals(userId, true) && !it.isRead })
+            .filter { chat ->
+                (chat.userId1.equals(userId, true) || chat.userId2.equals(userId, true))
+                        && (chat.messages.any { it.toId.equals(userId, true) && !it.isRead })
             }
             .size
     }
@@ -79,13 +79,11 @@ class ChatService {
     fun getMessageByMessageId(chatId: Int, messageId: Int): Message {
         val chat =
             chats.find { it.chatId == chatId } ?: throw ChatNotFoundException("Чат с id = $chatId не найден!")
-        val message =
-            chat.messages.find { it.messageId == messageId }
-                ?: throw MessageNotFoundException("Сообщение с id = $messageId не найдено!")
-        return message
+        return chat.messages.find { it.messageId == messageId }
+            ?: throw MessageNotFoundException("Сообщение с id = $messageId не найдено!")
     }
 
-    fun getLastMessage(chat: Chat): Message? {
+    private fun getLastMessage(chat: Chat): Message? {
         return chat.messages.lastOrNull()
     }
 
@@ -93,10 +91,9 @@ class ChatService {
         val chat =
             chats.find { it.chatId == chatId } ?: throw ChatNotFoundException("Chat with id = $chatId not found!")
         val messages = chat.messages
-            .takeLastWhile { messageId != it.messageId }
-            .take(count)
+            .takeWhile { messageId != it.messageId }
+            .takeLast(count)
         messages.filter { it.toId.equals(currentUserId, true) }.forEach { it.isRead = true }
-
         return messages
     }
 
@@ -108,5 +105,4 @@ class ChatService {
 
         chats.removeIf { it.messages.isEmpty() }
     }
-
 }
