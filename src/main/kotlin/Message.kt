@@ -1,8 +1,8 @@
 data class Message(
-    var messageId: Int = 0,
-    var text: String = "",
+    val messageId: Int = 0,
     val fromId: String = "",
     val toId: String = "",
+    var text: String = "",
     var isRead: Boolean = false
 ) {
     override fun toString(): String {

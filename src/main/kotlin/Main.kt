@@ -12,11 +12,6 @@ fun main() {
 
     val chatService = ChatService()
 
-    chatService.login("Сергей")
-
-    chatService.sendMessage("Олег", "Привет, Олег!")
-    chatService.sendMessage("Петр", "Как дела, Петр?")
-
     val listOfCommands = "Список команд:\n" +
             "1 - ОТПРАВИТЬ СООБЩЕНИЕ\n" +
             "2 - РЕДАКТИРОВАТЬ СООБЩЕНИЕ\n" +

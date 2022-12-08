@@ -5,9 +5,6 @@ class ChatService {
     private val chats = mutableListOf<Chat>()
 
     private var currentUserId = ""
-    private var currentChatId = 0
-    private var currentMessageId = 0
-
     fun login(userId: String) {
         currentUserId = userId
     }
@@ -23,22 +20,21 @@ class ChatService {
     fun getChatPresentation(chat: Chat): String {
         return "id чата: ${chat.chatId}; с ${
             if (!chat.userId1.equals(currentUserId, true)) chat.userId1 else chat.userId2
-        }; последнее сообщение: ${getLastMessage(chat) ?: "нет сообщений;"}"
+        }; последнее сообщение: <${chat.messages.lastOrNull() ?: "нет сообщений"}>"
     }
 
-    fun createChatWithUserId(toId: String): Chat {
-        currentChatId++
-        val chat = Chat(currentChatId, currentUserId, toId)
-        chats.add(chat)
-        return chats.last()
-    }
-
-    fun getChatPeerToPeer(peerId1: String, peerId2: String): Chat? {
+    private fun getChatWithPeer(peerId: String): Chat {
         return chats
-            .find {
-                (it.userId1.equals(peerId1, true) && it.userId2.equals(peerId2, true))
-                        || (it.userId1.equals(peerId2, true) && it.userId2.equals(peerId1, true))
+            .singleOrNull {
+                (it.userId1.equals(peerId, true) && it.userId2.equals(currentUserId, true))
+                        || (it.userId1.equals(currentUserId, true) && it.userId2.equals(peerId, true))
             }
+            ?: run {
+                val newChatId = (chats.lastOrNull()?.chatId ?: 0) + 1
+                chats.add(Chat(chatId = newChatId, userId1 = currentUserId, userId2 = peerId))
+                chats.last()
+            }
+
     }
 
     fun getChatsByUserId(userId: String): List<Chat> {
@@ -60,52 +56,45 @@ class ChatService {
     }
 
     fun sendMessage(toId: String, text: String) {
-        val chat = getChatPeerToPeer(currentUserId, toId) ?: createChatWithUserId(toId)
-        currentMessageId++
-        val message = Message(currentMessageId, text, currentUserId, toId)
-        chat.messages.add(message)
+        val chat = getChatWithPeer(peerId = toId)
+        val newMessageId = (chat.messages.lastOrNull()?.messageId ?: 0) + 1
+        chat.messages.add(Message(messageId = newMessageId, fromId = currentUserId, toId = toId, text = text))
     }
 
     fun editMessage(chatId: Int, messageId: Int, text: String) {
-        val chat =
-            chats.find { it.chatId == chatId }
-                ?: throw ChatNotFoundException("Чат с id = $chatId не найден!")
-        val message =
-            chat.messages.find { it.messageId == messageId }
-                ?: throw MessageNotFoundException("Сообщение с id = $messageId не найдено!")
-        message.text = text
+        chats.singleOrNull { it.chatId == chatId }
+            .let { it?.messages ?: throw ChatNotFoundException("Чат id = $chatId не найден!") }
+            .singleOrNull { it.messageId == messageId }
+            .let {
+                it ?: throw MessageNotFoundException("Сообщение id = $messageId не найдено!")
+                it.text = text
+            }
     }
 
-    fun getMessageByMessageId(chatId: Int, messageId: Int): Message {
-        val chat =
-            chats.find { it.chatId == chatId } ?: throw ChatNotFoundException("Чат с id = $chatId не найден!")
-        val message =
-            chat.messages.find { it.messageId == messageId }
-                ?: throw MessageNotFoundException("Сообщение с id = $messageId не найдено!")
-        return message
-    }
-
-    fun getLastMessage(chat: Chat): Message? {
-        return chat.messages.lastOrNull()
-    }
+    fun getMessageByMessageId(chatId: Int, messageId: Int): Message =
+        chats.singleOrNull { it.chatId == chatId }
+            .let { it?.messages ?: throw ChatNotFoundException("Чат id = $chatId не найден!") }
+            .singleOrNull { it.messageId == messageId }
+            ?: throw MessageNotFoundException("Сообщение id = $messageId не найдено!")
 
     fun getMessages(chatId: Int, messageId: Int, count: Int): List<Message> {
-        val chat =
-            chats.find { it.chatId == chatId } ?: throw ChatNotFoundException("Chat with id = $chatId not found!")
-        val messages = chat.messages
+        return chats.singleOrNull { it.chatId == chatId }
+            .let { it?.messages ?: throw ChatNotFoundException("Чат id = $chatId не найден!") }
             .takeWhile { messageId != it.messageId }
             .takeLast(count)
-        messages.filter { it.toId.equals(currentUserId, true) }.forEach { it.isRead = true }
-
-        return messages
+            .apply {
+                filter { it.toId.equals(currentUserId, true) }
+                    .forEach { it.isRead = true }
+            }
     }
 
-    fun deleteMessage(chatId: Int, messageId: Int) {
-        val chat = chats
-            .find { it.chatId == chatId } ?: throw ChatNotFoundException("Чат с id = $chatId не найден!")
-        if (!chat.messages.removeIf { it.messageId == messageId })
-            throw MessageNotFoundException("Сообщение с id = $messageId не найдено!")
-
-        chats.removeIf { it.messages.isEmpty() }
+        fun deleteMessage(chatId: Int, messageId: Int) {
+            chats.singleOrNull { it.chatId == chatId }
+                .apply {
+                    this?.messages ?: throw ChatNotFoundException("Чат id = $chatId не найден!")
+                    this.messages.removeIf { it.messageId == messageId }
+                    chats.removeIf { this.messages.isEmpty() }
+                }
+        }
     }
-}
+

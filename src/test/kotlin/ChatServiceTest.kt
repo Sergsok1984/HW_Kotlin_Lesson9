@@ -156,7 +156,7 @@ class ChatServiceTest {
         val chatPresentation = chatService.getChatPresentation(chat)
 
         assertEquals(
-            "id чата: 1; с Олег; последнее сообщение: id сообщения: 1; от: Сергей; кому: Олег; сообщение: Привет, Олег!",
+            "id чата: 1; с Олег; последнее сообщение: <id сообщения: 1; от: Сергей; кому: Олег; сообщение: Привет, Олег!>",
             chatPresentation
         )
     }
